@@ -3,6 +3,7 @@ from flask_login import login_required
 from ..models import Department
 from ..forms import DepartmentForm
 from ..extensions import db
+from app.utils.access_control import role_required
 
 bp = Blueprint('department', __name__)
 
@@ -14,6 +15,7 @@ def list_departments():
 
 @bp.route('/create', methods=['GET', 'POST'])
 @login_required
+@role_required(60)
 def create_department():
     form = DepartmentForm()
     if form.validate_on_submit():

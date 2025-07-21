@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from ..models import Task, Project, User
 from ..extensions import db
+from app.utils.access_control import role_required
 
 bp = Blueprint('task', __name__)
 
@@ -13,6 +14,7 @@ def list_tasks():
 
 @bp.route('/create', methods=['GET', 'POST'])
 @login_required
+@role_required(50)
 def create_task():
     projects = Project.query.all()
     users = User.query.all()

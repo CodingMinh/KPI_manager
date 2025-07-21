@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from ..models import Project
 from ..extensions import db
+from app.utils.access_control import role_required
 
 bp = Blueprint('project', __name__)
 
@@ -13,6 +14,7 @@ def list_projects():
 
 @bp.route('/create', methods=['GET', 'POST'])
 @login_required
+@role_required(50)
 def create_project():
     if request.method == 'POST':
         name = request.form.get('name')

@@ -1,6 +1,7 @@
 from datetime import datetime
 from .extensions import db
 from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
 
 task_assignments = db.Table(
     'task_assignments',
@@ -28,8 +29,13 @@ class User(UserMixin, db.Model):
     name = db.Column(db.String(128), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128))
-
     assignments = db.relationship('UserAssignment', back_populates='user')
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
 class UserAssignment(db.Model):
     __tablename__ = 'user_assignments'
@@ -78,3 +84,8 @@ class Evaluation(db.Model):
     task = db.relationship('Task')
     evaluator = db.relationship('User', foreign_keys=[evaluator_id])
     evaluated_user = db.relationship('User', foreign_keys=[evaluated_user_id])
+    
+    # force score to only be between 0 and 100
+    __table_args__ = (
+        db.CheckConstraint('score >= 0 AND score <= 100', name='check_score_range'),
+    )

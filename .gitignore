@@ -1,3 +1,30 @@
-/.env
-/.flaskenv
-/.venv
+# Python bytecode and cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Flask instance folder
+instance/
+
+# SQLite database files
+*.db
+
+# Flask-Migrate migration scripts, but track Alembic migrations
+migrations/versions/*.pyc
+
+# Environment config files
+.env
+.flaskenv
+
+# VS Code editor settings
+.vscode/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
