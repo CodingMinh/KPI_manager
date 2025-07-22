@@ -2,6 +2,7 @@ from datetime import datetime
 from .extensions import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from app import login_manager
 
 task_assignments = db.Table(
     'task_assignments',
@@ -36,6 +37,10 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+    
+@login_manager.user_loader
+def load_user(id): # id passed in here is string so we want to convert back to int for our database
+    return db.session.get(User, int(id))
 
 class UserAssignment(db.Model):
     __tablename__ = 'user_assignments'

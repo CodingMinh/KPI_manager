@@ -1,7 +1,8 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash
 from flask_login import login_required, current_user
-from ..models import Project
-from ..extensions import db
+from app.forms.project_forms import ProjectForm
+from app.models import Project
+from app.extensions import db
 from app.utils.access_control import role_required
 
 bp = Blueprint('project', __name__)
@@ -16,13 +17,11 @@ def list_projects():
 @login_required
 @role_required(50)
 def create_project():
-    if request.method == 'POST':
-        name = request.form.get('name')
-        if name:
-            project = Project(name=name, creator_id=current_user.id)
-            db.session.add(project)
-            db.session.commit()
-            flash('Project created successfully.', 'success')
-            return redirect(url_for('project.list_projects'))
-        flash('Project name is required.', 'danger')
-    return render_template('project/create.html')
+    form = ProjectForm()
+    if form.validate_on_submit():
+        proj = Project(name=form.name.data, creator_id=current_user.id)
+        db.session.add(proj)
+        db.session.commit()
+        flash('Project created successfully.', 'success')
+        return redirect(url_for('project.list_projects'))
+    return render_template('project/create.html', form=form)
