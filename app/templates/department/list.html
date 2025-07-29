@@ -9,5 +9,7 @@
         <li>{{ dept.name }}</li>
     {% endfor %}
 </ul>
-<a href="{{ url_for('department.create_department') }}">Create New Department</a>
+{% if current_user.max_role_level >= 60 %}
+    <a href="{{ url_for('department.create_department') }}">Create New Department</a>
+{% endif %}
 {% endblock %}

@@ -38,6 +38,11 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
     
+    @property
+    def max_role_level(self):
+        levels = [assignment.role.level for assignment in self.assignments]
+        return max(levels) if levels else 0
+    
 @login_manager.user_loader
 def load_user(id): # id passed in here is string so we want to convert back to int for our database
     return db.session.get(User, int(id))
@@ -94,3 +99,12 @@ class Evaluation(db.Model):
     __table_args__ = (
         db.CheckConstraint('score >= 0 AND score <= 100', name='check_score_range'),
     )
+
+class AccessRequest(db.Model):
+    __tablename__ = 'access_requests'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    reason = db.Column(db.Text, nullable=True)
+    status = db.Column(db.String(20), default='pending')
+    timestamp = db.Column(db.DateTime, server_default=db.func.now())
+    user = db.relationship('User', backref='access_requests')

@@ -28,3 +28,5 @@ migrations/versions/*.pyc
 # OS-specific files
 .DS_Store
 Thumbs.db
+
+seed_data.py
