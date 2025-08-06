@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Welcome, {{ current_user.name }}!</h1>
+<p>Use the navigation menu to manage departments, projects, and tasks.</p>
+<p>Your top role level: {{ current_user.max_role_level }}</p>
+<ul>
+  {% for assign in current_user.assignments %}
+    <li>{{ assign.department.name }}: {{ assign.role.name }} (Level {{ assign.role.level }})</li>
+  {% endfor %}
+</ul>
+{% endblock %}

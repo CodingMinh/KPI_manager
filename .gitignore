@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+instance/
+*.db
+migrations/versions/*.pyc
+.env
+.flaskenv
+.vscode/
+.DS_Store
+Thumbs.db
+seed_data.py
