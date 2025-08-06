@@ -35,7 +35,8 @@ def list_users():
     return render_template(
         'user/list.html',
         pagination=pagination,
-        departments=Department.query.filter(Department.id.in_(managed_depts)).all()
+        departments=Department.query.filter(Department.id.in_(managed_depts)).all(),
+        title='Users'
     )
 
 @bp.route('/assign', methods=['GET', 'POST'])
@@ -67,7 +68,7 @@ def assign_role():
         flash("Role assignment updated.", "success")
         return redirect(url_for('user.list_users'))
 
-    return render_template('user/assign.html', form=form)
+    return render_template('user/assign_user_roles.html', form=form, title='Assign role to user')
 
 @bp.route('/manage-roles', methods=['GET', 'POST'])
 @login_required
@@ -95,7 +96,7 @@ def manage_roles():
         flash("Roles updated successfully.", "success")
         return redirect(url_for('user.manage_roles'))
 
-    return render_template('user/manage_assignments.html', forms=forms)
+    return render_template('user/manage_user_roles.html', forms=forms, title='Manage user roles')
 
 @bp.route('/delete-assignment/<int:assignment_id>', methods=['POST'])
 @login_required
@@ -127,7 +128,7 @@ def edit_user(user_id):
         flash("User updated successfully.", "success")
         return redirect(url_for('user.list_users'))
 
-    return render_template('user/edit.html', form=form, user=user)
+    return render_template('user/edit.html', form=form, user=user, title='Edit user role')
 
 @bp.route('/<int:user_id>/delete', methods=['POST'])
 @login_required

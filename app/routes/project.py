@@ -11,7 +11,7 @@ bp = Blueprint('project', __name__)
 @login_required
 def list_projects():
     projects = Project.query.all()
-    return render_template('project/list.html', projects=projects)
+    return render_template('project/list.html', projects=projects, title='Projects')
 
 @bp.route('/create', methods=['GET', 'POST'])
 @login_required
@@ -19,9 +19,9 @@ def list_projects():
 def create_project():
     form = ProjectForm()
     if form.validate_on_submit():
-        proj = Project(name=form.name.data, creator_id=current_user.id)
+        proj = Project(name=form.name.data, creator_id=current_user.id, department_id=form.department_id.data)
         db.session.add(proj)
         db.session.commit()
         flash('Project created successfully.', 'success')
         return redirect(url_for('project.list_projects'))
-    return render_template('project/create.html', form=form)
+    return render_template('project/create.html', form=form, title='Create project')

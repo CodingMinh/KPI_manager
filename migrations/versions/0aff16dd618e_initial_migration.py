@@ -1,8 +1,8 @@
 """Initial migration
 
-Revision ID: 5770c9505e15
+Revision ID: 0aff16dd618e
 Revises: 
-Create Date: 2025-07-21 20:39:41.548254
+Create Date: 2025-08-06 16:53:54.017099
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '5770c9505e15'
+revision = '0aff16dd618e'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -22,7 +22,7 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=128), nullable=False),
     sa.Column('parent_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['parent_id'], ['departments.id'], ),
+    sa.ForeignKeyConstraint(['parent_id'], ['departments.id'], name='fk_departments_parent_id'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('roles',
@@ -35,15 +35,29 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=128), nullable=False),
     sa.Column('email', sa.String(length=120), nullable=False),
-    sa.Column('password_hash', sa.String(length=128), nullable=True),
+    sa.Column('password_hash', sa.String(length=128), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email')
+    )
+    op.create_table('access_requests',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('reason', sa.Text(), nullable=True),
+    sa.Column('status', sa.String(length=20), nullable=True),
+    sa.Column('timestamp', sa.DateTime(), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=True),
+    sa.Column('decision_timestamp', sa.DateTime(), nullable=True),
+    sa.Column('decided_by', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['decided_by'], ['users.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('projects',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=128), nullable=False),
     sa.Column('creator_id', sa.Integer(), nullable=True),
+    sa.Column('department_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['creator_id'], ['users.id'], ),
+    sa.ForeignKeyConstraint(['department_id'], ['departments.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('user_assignments',
@@ -102,6 +116,7 @@ def downgrade():
     op.drop_table('tasks')
     op.drop_table('user_assignments')
     op.drop_table('projects')
+    op.drop_table('access_requests')
     op.drop_table('users')
     op.drop_table('roles')
     op.drop_table('departments')

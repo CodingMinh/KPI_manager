@@ -11,7 +11,7 @@ bp = Blueprint('task', __name__)
 @login_required
 def list_tasks():
     tasks = Task.query.all()
-    return render_template('task/list.html', tasks=tasks)
+    return render_template('task/list.html', tasks=tasks, title='Tasks')
 
 @bp.route('/create', methods=['GET', 'POST'])
 @login_required
@@ -41,4 +41,4 @@ def create_task():
         db.session.commit()
         flash('Task created successfully.', 'success')
         return redirect(url_for('task.list_tasks'))
-    return render_template('task/create.html', form=form)
+    return render_template('task/create.html', form=form, title='Create task')

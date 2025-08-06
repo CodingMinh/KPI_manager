@@ -6,12 +6,16 @@
       <p><strong>{{ req.user.name }}</strong> ({{ req.user.email }})</p>
       <p>Reason: {{ req.reason }}</p>
       <p>Status: {{ req.status }}</p>
-      <form method="POST" action="{{ url_for('auth.approve_access_request', request_id=req.id) }}">
-        <button type="submit">Approve</button>
-      </form>
-      <form method="POST" action="{{ url_for('auth.deny_access_request', request_id=req.id) }}">
-        <button type="submit">Deny</button>
-      </form>
+      {% if req.status == 'pending' %}
+        <form method="POST" action="{{ url_for('auth.approve_access_request', request_id=req.id) }}">
+          <button type="submit">Approve</button>
+        </form>
+        <form method="POST" action="{{ url_for('auth.deny_access_request', request_id=req.id) }}">
+          <button type="submit">Deny</button>
+        </form>
+      {% else %}
+        <p>Reviewed by {{ req.reviewer.name }} on {{ req.decision_timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+      {% endif %}
     </div>
   {% endfor %}
 {% endblock %}

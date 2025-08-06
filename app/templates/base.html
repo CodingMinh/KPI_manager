@@ -3,7 +3,11 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}KPI Manager{% endblock %}</title>
+    {% if title %}
+        <title>{{ title }} - KPI Manager</title>
+    {% else %}
+        <title>KPI Manager</title>
+    {% endif %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
@@ -20,7 +24,7 @@
                     {% if manages_departments %}
                         <a href="{{ url_for('user.manage_roles') }}">Manage Roles</a>
                     {% endif %}
-                    {% if current_user.is_authenticated %}
+                    {% if 100 > current_user.max_role_level %}
                         <a href="{{ url_for('auth.request_access') }}">Request Access</a>
                     {% endif %}
                     <a href="{{ url_for('auth.logout') }}">Logout</a>

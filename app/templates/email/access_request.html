@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Access Request</title>
+</head>
+<body>
+  <h2>New Access Request</h2>
+  <p><strong>User:</strong> {{ user.email }}</p>
+  <p><strong>Reason:</strong> {{ reason }}</p>
+  <p>Please review the request in the <a href="{{ url_for('auth.view_access_requests', _external=True) }}">admin panel</a>.</p>
+</body>
+</html>

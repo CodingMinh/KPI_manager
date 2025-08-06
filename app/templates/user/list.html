@@ -22,7 +22,7 @@
     <li>
       {{ user.name }} — Top Role Level: {{ user.max_role_level }}
       <!-- Edit/Delete links if permitted -->
-      {% if current_user.max_role_level >= 80 or user.assignments|map(attribute='department_id')|list|intersect([a.department_id for a in current_user.assignments if a.role.level >= 60]) %}
+      {% if current_user.max_role_level >= 80 %}
         <a href="{{ url_for('user.edit_user', user_id=user.id) }}">Edit</a>
         <form action="{{ url_for('user.delete_user', user_id=user.id) }}" method="post" style="display:inline">
           <button type="submit">Delete</button>

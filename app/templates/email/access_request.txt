@@ -1,0 +1,6 @@
+New access request received:
+
+User: {{ user.email }}
+Reason: {{ reason }}
+
+Please review the request in the admin panel.

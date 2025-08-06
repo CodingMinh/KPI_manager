@@ -1,5 +1,5 @@
 from datetime import datetime
-from .extensions import db
+from app.extensions import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import login_manager
@@ -15,8 +15,12 @@ class Department(db.Model):
     __tablename__ = 'departments'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), nullable=False)
-    parent_id = db.Column(db.Integer, db.ForeignKey('departments.id'))
+    parent_id = db.Column(db.Integer, db.ForeignKey('departments.id', name='fk_departments_parent_id'))
     children = db.relationship('Department', backref='parent', remote_side=[id])
+    projects = db.relationship('Project', back_populates='department', lazy='dynamic')
+
+    def __repr__(self):
+        return f"<Department {self.name}>"
 
 class Role(db.Model):
     __tablename__ = 'roles'
@@ -29,8 +33,11 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128))
+    password_hash = db.Column(db.String(128), nullable=False)
     assignments = db.relationship('UserAssignment', back_populates='user')
+
+    def __repr__(self):
+        return f"<User {self.email}>"
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -63,7 +70,10 @@ class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), nullable=False)
     creator_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    creator = db.relationship('User')
+    department_id = db.Column(db.Integer, db.ForeignKey('departments.id'), nullable=False)
+    
+    creator = db.relationship('User', backref='created_projects')
+    department = db.relationship('Department', back_populates='projects')
 
 class Task(db.Model):
     __tablename__ = 'tasks'
@@ -107,4 +117,7 @@ class AccessRequest(db.Model):
     reason = db.Column(db.Text, nullable=True)
     status = db.Column(db.String(20), default='pending')
     timestamp = db.Column(db.DateTime, server_default=db.func.now())
-    user = db.relationship('User', backref='access_requests')
+    decision_timestamp = db.Column(db.DateTime)
+    decided_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user = db.relationship('User', foreign_keys=[user_id], backref='access_requests')
+    reviewer = db.relationship('User', foreign_keys=[decided_by])

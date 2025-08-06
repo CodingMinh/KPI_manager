@@ -6,8 +6,8 @@
 pip install -r requirements.txt
 3. Create `.env` with your `SECRET_KEY` and `DATABASE_URL`
 4. Initialize database:
-flask db init
-flask db migrate -m "Initial migration"
-flask db upgrade
+- flask db init
+- flask db migrate -m "Initial migration"
+- flask db upgrade
 5. Run the app:
 flask run
