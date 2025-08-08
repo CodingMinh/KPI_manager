@@ -27,6 +27,9 @@
                     {% if 100 > current_user.max_role_level %}
                         <a href="{{ url_for('auth.request_access') }}">Request Access</a>
                     {% endif %}
+                    {% if current_user.max_role_level >= 80 %}
+                        <a href="{{ url_for('auth.view_access_requests') }}">Access Requests</a>
+                    {% endif %}
                     <a href="{{ url_for('auth.logout') }}">Logout</a>
                 {% else %}
                     <a href="{{ url_for('auth.login') }}">Login</a>

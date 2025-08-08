@@ -20,6 +20,7 @@ def list_users():
         return redirect(url_for('home.dashboard'))
 
     dept_id = request.args.get('department', type=int)
+    departments = Department.query.order_by(Department.name).all()
     query = User.query.join(User.assignments)
 
     # Restrict for managers
@@ -35,8 +36,9 @@ def list_users():
     return render_template(
         'user/list.html',
         pagination=pagination,
-        departments=Department.query.filter(Department.id.in_(managed_depts)).all(),
-        title='Users'
+        #departments=Department.query.filter(Department.id.in_(managed_depts)).all(),
+        departments=departments,
+        title='Users',
     )
 
 @bp.route('/assign', methods=['GET', 'POST'])
@@ -96,7 +98,8 @@ def manage_roles():
         flash("Roles updated successfully.", "success")
         return redirect(url_for('user.manage_roles'))
 
-    return render_template('user/manage_user_roles.html', forms=forms, title='Manage user roles')
+    roles = Role.query.order_by(Role.level).all()
+    return render_template('user/manage_user_roles.html', forms=forms, title='Manage user roles', roles=roles)
 
 @bp.route('/delete-assignment/<int:assignment_id>', methods=['POST'])
 @login_required
@@ -111,6 +114,16 @@ def delete_assignment(assignment_id):
     flash("Assignment deleted.", "success")
     return redirect(url_for('user.manage_roles'))
 
+@bp.route('/update-assignment/<int:assignment_id>', methods=['POST'])
+@login_required
+def update_assignment(assignment_id):
+    assignment = UserAssignment.query.get_or_404(assignment_id)
+    new_role_id = int(request.form.get('role_id'))
+    assignment.role_id = new_role_id
+    db.session.commit()
+    flash("Role updated successfully.", "success")
+    return redirect(url_for('user.manage_roles'))
+
 @bp.route('/<int:user_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_user(user_id):
@@ -123,8 +136,14 @@ def edit_user(user_id):
 
     form = EditUserForm(obj=user)
     if form.validate_on_submit():
+        user.name = form.name.data
         user.email = form.email.data
+        assignment = user.assignments[0] if user.assignments else None
+        if assignment:
+            assignment.department_id = form.department_id.data
+            assignment.role_id = form.role_id.data
         db.session.commit()
+        db.session.refresh(user)
         flash("User updated successfully.", "success")
         return redirect(url_for('user.list_users'))
 

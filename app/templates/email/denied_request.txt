@@ -1,0 +1,8 @@
+Hello {{ user.name }},
+
+Unfortunately, your access request has been denied.
+
+If you believe this was in error, please contact your department manager or an administrator.
+
+Regards,
+KPI Manager Team

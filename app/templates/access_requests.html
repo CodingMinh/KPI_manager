@@ -1,21 +1,48 @@
 {% extends 'base.html' %}
+
 {% block content %}
-  <h2>Pending Access Requests</h2>
-  {% for req in requests %}
-    <div class="request">
-      <p><strong>{{ req.user.name }}</strong> ({{ req.user.email }})</p>
-      <p>Reason: {{ req.reason }}</p>
-      <p>Status: {{ req.status }}</p>
-      {% if req.status == 'pending' %}
-        <form method="POST" action="{{ url_for('auth.approve_access_request', request_id=req.id) }}">
-          <button type="submit">Approve</button>
+<h2>Access Requests</h2>
+<table class="table">
+  <thead>
+    <tr>
+      <th>User</th>
+      <th>Reason</th>
+      <th>Status</th>
+      <th>Requested At</th>
+      <th>Decision</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in requests %}
+    <tr>
+      <td>{{ r.user.name }}</td>
+      <td>{{ r.reason }}</td>
+      <td>{{ r.status }}</td>
+      <td>{{ r.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+      <td>
+        {% if r.status == 'pending' %}
+        <form action="{{ url_for('auth.handle_access_request', request_id=r.id, action='approve') }}" method="post" style="display:inline">
+          <select name="role_id" class="form-select form-select-sm d-inline w-auto">
+            {% for role in roles %}
+              <option value="{{ role.id }}">{{ role.name }}</option>
+            {% endfor %}
+          </select>
+          <select name="department_id" class="form-select form-select-sm d-inline w-auto">
+              {% for dept in departments %}
+                <option value="{{ dept.id }}">{{ dept.name }}</option>
+              {% endfor %}
+          </select>
+          <button class="btn btn-success btn-sm">Approve</button>
         </form>
-        <form method="POST" action="{{ url_for('auth.deny_access_request', request_id=req.id) }}">
-          <button type="submit">Deny</button>
+        <form action="{{ url_for('auth.handle_access_request', request_id=r.id, action='deny') }}" method="post" style="display:inline">
+          <button class="btn btn-danger btn-sm">Deny</button>
         </form>
-      {% else %}
-        <p>Reviewed by {{ req.reviewer.name }} on {{ req.decision_timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</p>
-      {% endif %}
-    </div>
-  {% endfor %}
+        {% else %}
+          {{ r.status.title() }}
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 {% endblock %}

@@ -6,7 +6,7 @@ class TaskForm(FlaskForm):
     name = StringField('Task Name', validators=[DataRequired()])
     description = TextAreaField('Description')
     project_id = SelectField('Project', coerce=int, validators=[DataRequired()])
-    manager_id = SelectField('Manager', coerce=int)
+    manager_id = SelectField('Manager', coerce=int, validators=[DataRequired()])
     assignees = SelectMultipleField('Assignees', coerce=int)
     start_date = DateField('Start Date')
     end_date = DateField('End Date')

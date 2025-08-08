@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Edit User</h2>
+<form method="post">
+  {{ form.hidden_tag() }}
+  <div class="mb-3">
+    {{ form.name.label }}
+    {{ form.name(class="form-control") }}
+  </div>
+  <div class="mb-3">
+    {{ form.email.label }}
+    {{ form.email(class="form-control") }}
+  </div>
+  <div class="mb-3">
+    {{ form.department_id.label }}
+    {{ form.department_id(class="form-select") }}
+  </div>
+  <div class="mb-3">
+    {{ form.role_id.label }}
+    {{ form.role_id(class="form-select") }}
+  </div>
+  <div>
+    {{ form.submit(class="btn btn-primary") }}
+  </div>
+</form>
+{% endblock %}

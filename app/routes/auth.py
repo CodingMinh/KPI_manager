@@ -65,6 +65,7 @@ def request_access():
         for admin in admins:
             send_email(
                 subject="New Access Request",
+                sender=current_user.email,
                 recipients=[admin.email],
                 text_body=render_template("email/access_request.txt", user=current_user, reason=reason),
                 html_body=render_template("email/access_request.html", user=current_user, reason=reason)
@@ -79,53 +80,50 @@ def request_access():
 @role_required(80)
 def view_access_requests():
     requests = AccessRequest.query.order_by(AccessRequest.timestamp.desc()).all()
-    return render_template("access_requests.html", requests=requests, title='Access Requests')
+    roles = Role.query.order_by(Role.level.asc()).all()
+    departments = Department.query.order_by(Department.name).all()
+    return render_template("access_requests.html", requests=requests, title='Access Requests', roles=roles, departments=departments)
 
-@bp.route('/access-requests/<int:request_id>/approve', methods=['POST'])
+@bp.route('/access-requests/<int:request_id>/<action>', methods=['POST'])
 @login_required
 @role_required(80)
-def approve_access_request(request_id):
+def handle_access_request(request_id, action):
     req = AccessRequest.query.get_or_404(request_id)
-    req.status = 'approved'
     req.decision_timestamp = datetime.now(timezone.utc)
     req.decided_by = current_user.id
 
-    default_dept = Department.query.first()
-    promoter_role = Role.query.filter_by(level=40).first()
-    if not promoter_role:
-        promoter_role = Role(name="Promoted", level=40)
-        db.session.add(promoter_role)
+    user = User.query.get(req.user_id)
+
+    if action == 'approve':
+        role_id = request.form.get("role_id", type=int)
+        role = Role.query.get(role_id)
+        dept = Department.query.first()
+        if role and dept:
+            req.status = 'approved'
+            db.session.add(UserAssignment(user_id=user.id, department_id=dept.id, role_id=role.id))
+            db.session.commit()
+            send_email(
+                subject="Access Request Approved",
+                sender=current_user.email,
+                recipients=[user.email],
+                text_body=render_template("email/approved_request.txt", user=user, role=role.name),
+                html_body=render_template("email/approved_request.html", user=user, role=role.name)
+            )
+            flash("Request approved and role assigned.", "success")
+        else:
+            flash("Invalid role or department.", "danger")
+    elif action == 'deny':
+        req.status = 'denied'
         db.session.commit()
-    ua = UserAssignment(user_id=req.user_id, department_id=default_dept.id, role_id=promoter_role.id)
-    db.session.add(ua)
-    db.session.commit()
+        send_email(
+            subject="Access Request Denied",
+            sender=current_user.email,
+            recipients=[user.email],
+            text_body=render_template("email/denied_request.txt", user=user),
+            html_body=render_template("email/denied_request.html", user=user)
+        )
+        flash("Request denied.", "warning")
+    else:
+        flash("Invalid action.", "danger")
 
-    user = User.query.get(req.user_id)
-    send_email(
-        subject="Access Request Approved",
-        recipients=[user.email],
-        body=f"Your access request has been approved and you've been granted the '{promoter_role.name}' role."
-    )
-
-    flash("Access request approved and role granted.", "success")
-    return redirect(url_for('auth.view_access_requests'))
-
-@bp.route('/access-requests/<int:request_id>/deny', methods=['POST'])
-@login_required
-@role_required(80)
-def deny_access_request(request_id):
-    req = AccessRequest.query.get_or_404(request_id)
-    req.status = 'denied'
-    req.decision_timestamp = datetime.now(timezone.utc)
-    req.decided_by = current_user.id
-    db.session.commit()
-
-    user = User.query.get(req.user_id)
-    send_email(
-        subject="Access Request Denied",
-        recipients=[user.email],
-        body="Your access request was denied."
-    )
-
-    flash("Access request denied.", "warning")
     return redirect(url_for('auth.view_access_requests'))

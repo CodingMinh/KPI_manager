@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
-<h1>Departments</h1>
+<h2>Departments</h2>
 <a href="{{ url_for('department.list_departments', view='tree') }}">Switch to Tree View</a>
 {% if current_user.max_role_level >= 60 %}
     <a href="{{ url_for('department.create_department') }}" class="btn btn-primary">Create New Department</a>

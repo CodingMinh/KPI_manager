@@ -4,8 +4,16 @@
 <p>Use the navigation menu to manage departments, projects, and tasks.</p>
 <p>Your top role level: {{ current_user.max_role_level }}</p>
 <ul>
-  {% for assign in current_user.assignments %}
-    <li>{{ assign.department.name }}: {{ assign.role.name }} (Level {{ assign.role.level }})</li>
+  {% set department_roles = {} %}
+  {% for assignment in current_user.assignments %}
+    {% set dept_id = assignment.department_id %}
+    {% if dept_id not in department_roles or assignment.role.level > department_roles[dept_id].role.level %}
+      {% set _ = department_roles.update({dept_id: assignment}) %}
+    {% endif %}
+  {% endfor %}
+
+  {% for assignment in department_roles.values() %}
+    <li>{{ assignment.role.name }} (Level {{ assignment.role.level }}) — {{ assignment.department.name }}</li>
   {% endfor %}
 </ul>
 {% endblock %}

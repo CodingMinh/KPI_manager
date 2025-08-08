@@ -1,11 +1,24 @@
 {% extends 'base.html' %}
 {% block content %}
-<h1>Projects</h1>
-<ul>
-    {% for project in projects %}
-        <li>{{ project.name }}</li>
-    {% endfor %}
-</ul>
+<h2>Projects</h2>
+<table>
+  <tr>
+    <th>Project</th>
+    <th>Department</th>
+  </tr>
+  {% for p in projects %}
+    <tr>
+      <td><a href="{{ url_for('project.project_detail', project_id=p.id) }}">{{ p.name }}</a></td>
+      <td>{{ p.department_name }}</td>
+      <td>
+        <a href="{{ url_for('project.edit_project', project_id=p.id) }}">Edit</a>
+        <form method="post" action="{{ url_for('project.delete_project', project_id=p.id) }}" style="display:inline">
+          <button type="submit">Delete</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+</table>
 {% if current_user.max_role_level >= 50 %}
     <a href="{{ url_for('project.create_project') }}">Create New Project</a>
 {% endif %}

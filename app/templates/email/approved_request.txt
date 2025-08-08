@@ -1,0 +1,9 @@
+Hello {{ user.name }},
+
+Your access request has been approved.
+You’ve been granted the role: {{ role }}.
+
+You can now access new features in the system.
+
+Regards,
+KPI Manager Team

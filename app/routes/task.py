@@ -1,7 +1,7 @@
-from flask import Blueprint, render_template, redirect, url_for, flash
+from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from app.forms.task_forms import TaskForm
-from app.models import Task, Project, User
+from app.models import Task, Project, User, Role
 from app.extensions import db
 from app.utils.access_control import role_required
 
@@ -18,10 +18,21 @@ def list_tasks():
 @role_required(50)
 def create_task():
     form = TaskForm()
-    # populate choices
-    form.project_id.choices = [(p.id, p.name) for p in Project.query.all()]
-    form.manager_id.choices = [(u.id, u.name) for u in User.query.all()]
-    form.assignees.choices = [(u.id, u.name) for u in User.query.all()]
+    projects = Project.query.order_by(Project.name).all()
+    managers = (
+        User.query
+        .join(User.assignments)
+        .join(Role)
+        .filter(Role.level >= 60)
+        .distinct()
+        .order_by(User.name)
+        .all()
+    )
+    users = User.query.order_by(User.name).all()
+
+    form.project_id.choices = [(p.id, p.name) for p in projects]
+    form.manager_id.choices = [(m.id, m.name) for m in managers]
+    form.assignees.choices = [(u.id, u.name) for u in users]
 
     if form.validate_on_submit():
         task = Task(
@@ -34,11 +45,15 @@ def create_task():
             manager_id=form.manager_id.data
         )
         for uid in form.assignees.data:
-            user = User.query.get(uid)
-            if user:
-                task.assignees.append(user)
+            u = User.query.get(uid)
+            if u:
+                task.assignees.append(u)
+
         db.session.add(task)
         db.session.commit()
         flash('Task created successfully.', 'success')
         return redirect(url_for('task.list_tasks'))
-    return render_template('task/create.html', form=form, title='Create task')
+    elif request.method == 'POST':
+        flash('Please fill out all required fields before submitting.', 'danger')
+
+    return render_template('task/create.html', form=form, projects=projects, managers=managers, users=users, title='Create task')

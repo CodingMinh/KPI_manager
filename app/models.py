@@ -71,6 +71,7 @@ class Project(db.Model):
     name = db.Column(db.String(128), nullable=False)
     creator_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id'), nullable=False)
+    description = db.Column(db.Text)
     
     creator = db.relationship('User', backref='created_projects')
     department = db.relationship('Department', back_populates='projects')
@@ -87,7 +88,7 @@ class Task(db.Model):
     manager_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     submitted = db.Column(db.Boolean, default=False)
 
-    project = db.relationship('Project')
+    project = db.relationship('Project', backref='tasks')
     creator = db.relationship('User', foreign_keys=[created_by])
     manager = db.relationship('User', foreign_keys=[manager_id])
     assignees = db.relationship('User', secondary=task_assignments, backref='assigned_tasks')
