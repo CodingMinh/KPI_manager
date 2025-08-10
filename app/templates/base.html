@@ -34,6 +34,7 @@
                 {% else %}
                     <a href="{{ url_for('auth.login') }}">Login</a>
                     <a href="{{ url_for('auth.register') }}">Register</a>
+                    <a href="{{ url_for('auth.reset_password_request') }}" class="btn btn-warning">Forgot Password?</a>
                 {% endif %}
             </ul>
         </div>

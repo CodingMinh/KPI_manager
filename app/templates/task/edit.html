@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Edit Task</h2>
+<form method="POST">
+  {{ form.hidden_tag() }}
+
+  <div class="mb-3">
+    {{ form.name.label }}
+    {{ form.name(class="form-control") }}
+  </div>
+
+  <div class="mb-3">
+    {{ form.description.label }}
+    {{ form.description(class="form-control") }}
+  </div>
+
+  <div class="mb-3">
+    {{ form.project_id.label }}
+    {{ form.project_id(class="form-select") }}
+  </div>
+
+  <div class="mb-3">
+    {{ form.manager_id.label }}
+    {{ form.manager_id(class="form-select") }}
+  </div>
+
+  <div class="mb-3">
+    {{ form.assignees.label }}
+    {{ form.assignees(class="form-select", multiple=true) }}
+    <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple.</small>
+  </div>
+
+  <div class="mb-3">
+    {{ form.start_date.label }}
+    {{ form.start_date(class="form-control") }}
+  </div>
+
+  <div class="mb-3">
+    {{ form.end_date.label }}
+    {{ form.end_date(class="form-control") }}
+  </div>
+
+  {{ form.submit(class="btn btn-primary") }}
+</form>
+{% endblock %}

@@ -15,5 +15,19 @@
   {% for assignment in department_roles.values() %}
     <li>{{ assignment.role.name }} (Level {{ assignment.role.level }}) — {{ assignment.department.name }}</li>
   {% endfor %}
+
+  {% set this_year = current_time.year %}
+  {% set this_month = current_time.month %}
+  <p>Your KPI for {{ this_month }}/{{ this_year }}:
+    {% if current_user.get_kpi_for_month(this_year, this_month) %}
+      {{ current_user.get_kpi_for_month(this_year, this_month) }}
+      <a class="btn btn-sm btn-link"
+        href="{{ url_for('user.user_kpi_detail', user_id=current_user.id, year=this_year, month=this_month) }}">
+        view details
+      </a>
+    {% else %}
+      No KPI yet
+    {% endif %}
+  </p>
 </ul>
 {% endblock %}

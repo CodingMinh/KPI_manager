@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>{{ task.name }}</h2>
+<p><strong>Project:</strong> {{ task.project.name if task.project else '—' }}</p>
+<p><strong>Description:</strong> {{ task.description or 'No description' }}</p>
+<p><strong>Manager:</strong> {{ task.manager.name if task.manager else '—' }}</p>
+<p><strong>Submitted:</strong> {{ 'Yes' if task.submitted else 'No' }}</p>
+
+{% if current_user in task.assignees %}
+  <form action="{{ url_for('task.toggle_submission', task_id=task.id) }}" method="post">
+    <button type="submit" class="btn btn-secondary">{% if task.submitted %}Mark as Not Done{% else %}Mark as Done{% endif %}</button>
+  </form>
+{% endif %}
+
+{% if current_user.max_role_level >= 60 %}
+  <a href="{{ url_for('task.review', task_id=task.id) }}" class="btn btn-primary">Review / Score</a>
+{% endif %}
+
+<h2>Assignees</h2>
+<ul>
+  {% for u in task.assignees %}
+    <li>{{ u.name }}{% if u.email %} — {{ u.email }}{% endif %}</li>
+  {% endfor %}
+</ul>
+
+<h2>Reviews</h2>
+<ul>
+  {% for r in task.reviews %}
+    <li>{{ r.reviewer.name }} scored {{ r.score }} — {{ r.comments or '' }} ({{ r.timestamp }})</li>
+  {% else %}
+    <li>No reviews yet.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

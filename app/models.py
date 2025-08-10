@@ -3,6 +3,7 @@ from app.extensions import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import login_manager
+from datetime import datetime, timezone
 
 task_assignments = db.Table(
     'task_assignments',
@@ -50,6 +51,11 @@ class User(UserMixin, db.Model):
         levels = [assignment.role.level for assignment in self.assignments]
         return max(levels) if levels else 0
     
+    def get_kpi_for_month(self, year: int, month: int):
+        """Return the highest KPI score (int) for this user in given year/month, or None."""
+        row = MonthlyKPI.query.filter_by(user_id=self.id, year=year, month=month).order_by(MonthlyKPI.score.desc()).first()
+        return row.score if row else None
+    
 @login_manager.user_loader
 def load_user(id): # id passed in here is string so we want to convert back to int for our database
     return db.session.get(User, int(id))
@@ -93,23 +99,17 @@ class Task(db.Model):
     manager = db.relationship('User', foreign_keys=[manager_id])
     assignees = db.relationship('User', secondary=task_assignments, backref='assigned_tasks')
 
-class Evaluation(db.Model):
-    __tablename__ = 'evaluations'
+class TaskReview(db.Model):
+    __tablename__ = 'task_reviews'
     id = db.Column(db.Integer, primary_key=True)
     task_id = db.Column(db.Integer, db.ForeignKey('tasks.id'), nullable=False)
-    evaluator_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    evaluated_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    score = db.Column(db.Integer)
-    evaluated_at = db.Column(db.DateTime, default=datetime.utcnow)
+    reviewer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    score = db.Column(db.Integer, nullable=False)
+    comments = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
-    task = db.relationship('Task')
-    evaluator = db.relationship('User', foreign_keys=[evaluator_id])
-    evaluated_user = db.relationship('User', foreign_keys=[evaluated_user_id])
-    
-    # force score to only be between 0 and 100
-    __table_args__ = (
-        db.CheckConstraint('score >= 0 AND score <= 100', name='check_score_range'),
-    )
+    task = db.relationship('Task', backref=db.backref('reviews', cascade='all, delete-orphan'))
+    reviewer = db.relationship('User')
 
 class AccessRequest(db.Model):
     __tablename__ = 'access_requests'
@@ -122,3 +122,21 @@ class AccessRequest(db.Model):
     decided_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     user = db.relationship('User', foreign_keys=[user_id], backref='access_requests')
     reviewer = db.relationship('User', foreign_keys=[decided_by])
+
+class MonthlyKPI(db.Model):
+    __tablename__ = 'monthly_kpis'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    reviewer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    year = db.Column(db.Integer, nullable=False)
+    month = db.Column(db.Integer, nullable=False)
+    score = db.Column(db.Integer, nullable=False)  # 0-100
+    comments = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    user = db.relationship('User', foreign_keys=[user_id], backref=db.backref('monthly_kpis', cascade='all, delete-orphan'))
+    reviewer = db.relationship('User', foreign_keys=[reviewer_id])
+
+    __table_args__ = (
+        db.Index('ix_monthlykpi_user_year_month', 'user_id', 'year', 'month'),
+    )

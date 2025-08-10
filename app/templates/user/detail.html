@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>User: {{ user.name }} ({{ user.email }})</h2>
+
+<p>
+  Departments:
+  {% for a in user.assignments %}
+    {{ a.department.name }}{% if not loop.last %}, {% endif %}
+  {% endfor %}
+</p>
+
+<h2>Filters</h2>
+<form method="get" class="mb-3">
+  {{ dr_form.hidden_tag() }}
+  Start: {{ dr_form.start_date() }}
+  End: {{ dr_form.end_date() }}
+  Completed only: {{ dr_form.completed_only() }}
+  <button type="submit" class="btn btn-secondary">Apply</button>
+</form>
+
+<h2>Tasks ({{ completed }} / {{ total }} completed (this page))</h2>
+<h2>Total tasks ({{ completed_all }} / {{ total }} completed)</h2>
+
+{% if tasks.total == 0 %}
+  <p>No tasks found.</p>
+{% else %}
+<table class="table">
+  <thead>
+    <tr>
+      <th>Name</th><th>Project</th><th>Assigned</th><th>Deadline</th><th>Completed</th><th>Manager</th><th>Score</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for t in tasks.items %}
+      <tr>
+        <td><a href="{{ url_for('task.detail', task_id=t.id) }}">{{ t.name }}</a></td>
+        <td>{{ t.project.name if t.project else '—' }}</td>
+        <td>{{ t.start_date }}</td>
+        <td>{{ t.end_date or '—' }}</td>
+        <td>{{ 'Yes' if t.submitted else 'No' }}</td>
+        <td>{{ t.manager.name if t.manager else '—' }}</td>
+        <td>
+          {% if t.reviews %}
+            {% set sorted_reviews = t.reviews|sort(attribute='score', reverse=True) %}
+            {{ sorted_reviews[0].score if sorted_reviews else '—' }}
+          {% else %}
+            —
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<nav aria-label="Tasks pagination" style="background-color: #333; padding: 10px;">
+  <ul class="pagination" style="margin: 0;">
+    {% if tasks.has_prev %}
+      <li class="page-item">
+        <a class="page-link" style="color: white; background-color: transparent; border: none;"
+           href="{{ url_for('user.user_detail', user_id=user.id, page=tasks.prev_num,
+                            start_date=request.args.get('start_date'), end_date=request.args.get('end_date'),
+                            completed_only=request.args.get('completed_only')) }}">
+          Previous
+        </a>
+      </li>
+    {% endif %}
+    <li class="page-item disabled">
+      <span class="page-link" style="color: white; background-color: transparent; border: none;">Page {{ tasks.page }} of {{ tasks.pages or 1 }}</span>
+    </li>
+    {% if tasks.has_next %}
+      <li class="page-item">
+        <a class="page-link" style="color: white; background-color: transparent; border: none;"
+           href="{{ url_for('user.user_detail', user_id=user.id, page=tasks.next_num,
+                            start_date=request.args.get('start_date'), end_date=request.args.get('end_date'),
+                            completed_only=request.args.get('completed_only')) }}">
+          Next
+        </a>
+      </li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+
+<h2>Monthly KPI</h2>
+<p>Highest KPI for {{ display_month }}/{{ display_year }}: {{ highest_kpi or 'No KPI yet' }}</p>
+<p><a href="{{ url_for('user.user_kpi_detail', user_id=user.id, year=display_year, month=display_month) }}">View month details</a></p>
+
+{% if current_user.max_role_level >= 60 %}
+<hr>
+<h3>Submit Monthly KPI (managers only)</h3>
+<form method="post">
+  {{ kpi_form.hidden_tag() }}
+  Year: {{ kpi_form.year(size=4) }}
+  Month: {{ kpi_form.month(size=2) }}
+  Score: {{ kpi_form.score(size=4) }}
+  Comments: {{ kpi_form.comments(rows=3, cols=40) }}
+  {{ kpi_form.submit(class="btn btn-primary") }}
+</form>
+{% endif %}
+{% endblock %}

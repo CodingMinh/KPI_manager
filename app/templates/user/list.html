@@ -21,8 +21,32 @@
   {% for user in pagination.items %}
     <li>
       {{ user.name }} — Top Role Level: {{ user.max_role_level }}
-      <!-- Edit/Delete links if permitted -->
+      
+      {% set can_view = false %}
       {% if current_user.max_role_level >= 80 %}
+        {% set can_view = true %}
+      {% else %}
+        {% for my_a in current_user.assignments %}
+          {% if my_a.role and my_a.role.level >= 60 %}
+            {% for their_a in user.assignments %}
+              {% if their_a.department_id == my_a.department_id %}
+                {% set can_view = true %}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+
+      {% if can_view %}
+        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('user.user_detail', user_id=user.id) }}">View</a>
+        {% if current_time is defined %}
+          <a class="btn btn-sm btn-outline-info" href="{{ url_for('user.user_kpi_detail', user_id=user.id, year=current_time.year, month=current_time.month) }}">KPI</a>
+        {% else %}
+          <a class="btn btn-sm btn-outline-info" href="{{ url_for('user.user_kpi_detail', user_id=user.id) }}">KPI</a>
+        {% endif %}
+      {% endif %}
+
+      {% if can_view or current_user.max_role_level >= 80 %}
         <a href="{{ url_for('user.edit_user', user_id=user.id) }}">Edit</a>
         <form action="{{ url_for('user.delete_user', user_id=user.id) }}" method="post" style="display:inline">
           <button type="submit">Delete</button>
@@ -32,14 +56,15 @@
   {% endfor %}
 </ul>
 
+{% set dept_param = request.args.get('department') %}
 {% if pagination.total > 0 %}
   <nav style="background-color: #333; padding: 10px;">
     {% if pagination.has_prev %}
-      <a href="?page={{ pagination.prev_num }}" style="color: white; margin-right: 10px;">Previous</a>
+      <a href="?page={{ pagination.prev_num }}{% if dept_param %}&department={{ dept_param }}{% endif %}" style="color: white; margin-right: 10px;">Previous</a>
     {% endif %}
     <span style="color: white;">Page {{ pagination.page }} of {{ pagination.pages if pagination.pages > 0 else 1 }}</span>
     {% if pagination.has_next %}
-      <a href="?page={{ pagination.next_num }}" style="color: white; margin-left: 10px;">Next</a>
+      <a href="?page={{ pagination.next_num }}{% if dept_param %}&department={{ dept_param }}{% endif %}" style="color: white; margin-left: 10px;">Next</a>
     {% endif %}
   </nav>
 {% else %}

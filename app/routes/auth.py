@@ -1,11 +1,12 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_user, logout_user, login_required, current_user
-from app.forms.auth_forms import LoginForm, RegistrationForm
+from app.forms.auth_forms import LoginForm, RegistrationForm, ResetPasswordForm, RequestPasswordResetForm
 from app.models import User, Role, Department, UserAssignment, AccessRequest
 from app.extensions import db
 from app.utils.access_control import role_required
 from app.utils.email import send_email
 from datetime import datetime, timezone
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 
 bp = Blueprint('auth', __name__)
 
@@ -44,6 +45,47 @@ def register():
         flash('Registration successful. Please log in.', 'success')
         return redirect(url_for('auth.login'))
     return render_template('auth/register.html', title='Register', form=form)
+
+def get_serializer():
+    return URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+
+@bp.route('/reset_password_request', methods=['GET', 'POST'])
+def reset_password_request():
+    if current_user.is_authenticated:
+        return redirect(url_for('home.dashboard'))
+    form = RequestPasswordResetForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user:
+            token = get_serializer().dumps(user.email, salt='password-reset-salt')
+            send_email(
+                subject='Reset Your Password',
+                sender=current_user.email,
+                recipients=[user.email],
+                text_body=render_template('email/reset_password.txt', user=user, token=token),
+                html_body=render_template('email/reset_password.html', user=user, token=token)
+            )
+        flash('If your email is registered, you will receive a password reset link.', 'info')
+        return redirect(url_for('auth.login'))
+    return render_template('auth/reset_password_request.html', form=form)
+
+@bp.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('home.dashboard'))
+    try:
+        email = get_serializer().loads(token, salt='password-reset-salt', max_age=3600)
+    except (SignatureExpired, BadSignature):
+        flash('Invalid or expired password reset link.', 'danger')
+        return redirect(url_for('auth.reset_password_request'))
+    user = User.query.filter_by(email=email).first_or_404()
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        user.set_password(form.password.data)
+        db.session.commit()
+        flash('Your password has been reset. You can now log in.', 'success')
+        return redirect(url_for('auth.login'))
+    return render_template('auth/reset_password.html', form=form)
 
 @bp.route('/logout')
 @login_required

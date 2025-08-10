@@ -1,0 +1,4 @@
+<p>Your task "<strong>{{ task.name }}</strong>" has been reviewed.</p>
+<p><strong>Score:</strong> {{ review.score }}</p>
+<p><strong>Comments:</strong> {{ review.comments or '(none)' }}</p>
+<p><a href="{{ url_for('task.detail', task_id=task.id, _external=True) }}">View task details</a></p>

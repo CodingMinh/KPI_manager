@@ -1,0 +1,4 @@
+User {{ user.name }} has marked the task "{{ task.name }}" as completed.
+Project: {{ task.project.name if task.project else '—' }}
+
+View the task: {{ url_for('task.detail', task_id=task.id, _external=True) }}

@@ -1,0 +1,5 @@
+Your task "{{ task.name }}" has been reviewed.
+Score: {{ review.score }}
+Comments: {{ review.comments or '' }}
+
+View details: {{ url_for('task.detail', task_id=task.id, _external=True) }}

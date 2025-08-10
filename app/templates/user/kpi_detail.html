@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>KPI details for {{ user.name }} — {{ month }}/{{ year }}</h2>
+
+<p>Highest KPI: {{ highest or 'N/A' }}</p>
+
+<h2>Manager submissions</h2>
+{% if kpis.total == 0 %}
+  <p>No KPI submissions for this month.</p>
+{% else %}
+<ul>
+  {% for k in kpis.items %}
+    <li>{{ k.reviewer.name }} — score: {{ k.score }} — {{ k.comments or '' }} — {{ k.timestamp }}</li>
+  {% endfor %}
+</ul>
+
+<nav aria-label="KPI pagination" style="background-color: #333; padding: 10px;">
+  {% if kpis.has_prev %}
+    <a style="color: white; margin-right: 10px;" href="{{ url_for('user.user_kpi_detail', user_id=user.id, year=year, month=month, kpage=kpis.prev_num, tpage=tasks.page if tasks else 1) }}">Prev KPIs</a>
+  {% endif %}
+  <span style="color: white;">Page {{ kpis.page }} of {{ kpis.pages or 1 }}</span>
+  {% if kpis.has_next %}
+    <a style="color: white; margin-left: 10px;" href="{{ url_for('user.user_kpi_detail', user_id=user.id, year=year, month=month, kpage=kpis.next_num, tpage=tasks.page if tasks else 1) }}">Next KPIs</a>
+  {% endif %}
+</nav>
+{% endif %}
+
+<h2>Tasks in month</h2>
+{% if tasks.total == 0 %}
+  <p>No tasks in this month.</p>
+{% else %}
+<table class="table">
+  <thead><tr><th>Task</th><th>Project</th><th>Assigned</th><th>Due</th><th>Completed</th></tr></thead>
+  <tbody>
+    {% for t in tasks.items %}
+      <tr>
+        <td><a href="{{ url_for('task.detail', task_id=t.id) }}">{{ t.name }}</a></td>
+        <td>{{ t.project.name if t.project else '—' }}</td>
+        <td>{{ t.start_date }}</td>
+        <td>{{ t.end_date or '—' }}</td>
+        <td>{{ 'Yes' if t.submitted else 'No' }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<nav aria-label="Tasks pagination" style="background-color: #333; padding: 10px; margin-top: 15px;">
+  {% if tasks.has_prev %}
+    <a style="color: white; margin-right: 10px;" href="{{ url_for('user.user_kpi_detail', user_id=user.id, year=year, month=month, tpage=tasks.prev_num, kpage=kpis.page if kpis else 1) }}">Previous Tasks</a>
+  {% endif %}
+  <span style="color: white;">Page {{ tasks.page }} of {{ tasks.pages or 1 }}</span>
+  {% if tasks.has_next %}
+    <a style="color: white; margin-left: 10px;" href="{{ url_for('user.user_kpi_detail', user_id=user.id, year=year, month=month, tpage=tasks.next_num, kpage=kpis.page if kpis else 1) }}">Next Tasks</a>
+  {% endif %}
+</nav>
+{% endif %}
+{% endblock %}

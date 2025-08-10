@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import SelectField, SubmitField, HiddenField, StringField
-from wtforms.validators import DataRequired, Email, Length
+from wtforms import SelectField, SubmitField, HiddenField, StringField, DateField, IntegerField, BooleanField, TextAreaField
+from wtforms.validators import DataRequired, Email, Length, Optional, NumberRange
 from app.models import User, Department, Role, UserAssignment
 
 class UserRoleAssignForm(FlaskForm):
@@ -36,3 +36,16 @@ class EditUserForm(FlaskForm):
         from app.models import Department, Role
         self.department_id.choices = [(d.id, d.name) for d in Department.query.order_by(Department.name).all()]
         self.role_id.choices = [(r.id, f"{r.name} (Level {r.level})") for r in Role.query.order_by(Role.level).all()]
+
+class DateRangeForm(FlaskForm):
+    start_date = DateField('Start date (inclusive)', validators=[Optional()])
+    end_date = DateField('End date (inclusive)', validators=[Optional()])
+    completed_only = BooleanField('Show only completed tasks')
+    submit = SubmitField('Filter')
+
+class MonthlyKPIForm(FlaskForm):
+    year = IntegerField('Year', validators=[DataRequired()])
+    month = IntegerField('Month (1-12)', validators=[DataRequired(), NumberRange(min=1, max=12)])
+    score = IntegerField('Score (0-100)', validators=[DataRequired(), NumberRange(min=0, max=100)])
+    comments = TextAreaField('Comments', validators=[Optional()])
+    submit = SubmitField('Submit KPI')
